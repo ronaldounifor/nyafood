@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.unifor.nyafood.model.Comida;
 
+@CrossOrigin(origin="*")
 @RestController 
 public class ComidaController {
    private ArrayList<Comida> menu = new ArrayList<>(Arrays.asList(
