@@ -1,0 +1,121 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NyaFood | Gerenciador</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#10131c;color:#f5f5f5;font:15px Arial;padding:30px}
+main{max-width:850px;margin:auto}h1{color:#ff8b55}p{color:#9299aa}
+.card{background:#1b2030;padding:20px;border-radius:15px;margin:18px 0}
+input,textarea,button{padding:12px;border:0;border-radius:8px;font:inherit}
+input,textarea{background:#101521;color:white;width:100%;margin:6px 0}
+textarea{height:100px;resize:vertical}button{background:#ff8050;color:white;cursor:pointer;font-weight:bold;margin:5px 3px}
+button:hover{opacity:.8}.item{background:#272e40;padding:13px;margin:9px 0;border-radius:9px;display:flex;justify-content:space-between;align-items:center;gap:10px;overflow-wrap:anywhere}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;color:#b9c8dc}
+#status{color:#ffad80}
+</style>
+</head>
+<body>
+<main>
+<h1>🍜 NyaFood</h1>
+<p>Gerenciador de itens da API</p>
+
+<div class="card">
+<h3>📦 Itens cadastrados</h3>
+<button onclick="listar()">Atualizar lista</button>
+<div id="lista"></div>
+</div>
+
+<div class="card">
+<h3>🔎 Buscar item por ID</h3>
+<input id="busca" placeholder="Digite o ID">
+<button onclick="buscar()">Buscar</button>
+<pre id="resultado"></pre>
+</div>
+
+<div class="card">
+<h3>➕ Cadastrar item</h3>
+<p>Informe os dados em formato JSON:</p>
+<textarea id="dados" placeholder='{"nome":"Hambúrguer","preco":25}'></textarea>
+<button onclick="criar()">Cadastrar item</button>
+</div>
+
+<p id="status">Conecte-se à API para começar.</p>
+</main>
+
+<script>
+const API = "https://nyafood.onrender.com/itens";
+const status = document.getElementById("status");
+
+async function requisicao(url, options = {}) {
+  try {
+    const r = await fetch(url, options);
+    const texto = await r.text();
+    const dados = texto ? JSON.parse(texto) : null;
+    if (!r.ok) throw new Error(dados?.message || texto || r.status);
+    status.textContent = "✅ Operação realizada!";
+    return dados;
+  } catch(e) {
+    status.textContent = "❌ " + e.message;
+    throw e;
+  }
+}
+
+async function listar() {
+  try {
+    const dados = await requisicao(API);
+    const itens = Array.isArray(dados) ? dados : dados?.itens || [];
+    document.getElementById("lista").innerHTML = "";
+    itens.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "item";
+      const info = document.createElement("span");
+      info.textContent = item.nome || JSON.stringify(item);
+      const btn = document.createElement("button");
+      btn.textContent = "Excluir";
+      btn.onclick = () => excluir(item.id ?? item._id);
+      div.append(info, btn);
+      document.getElementById("lista").append(div);
+    });
+    if (!itens.length) document.getElementById("lista").textContent = "Nenhum item encontrado.";
+  } catch {}
+}
+
+async function buscar() {
+  const id = document.getElementById("busca").value.trim();
+  if (!id) return;
+  try {
+    const dados = await requisicao(`${API}/${encodeURIComponent(id)}`);
+    document.getElementById("resultado").textContent = JSON.stringify(dados,null,2);
+  } catch {}
+}
+
+async function criar() {
+  try {
+    const dados = JSON.parse(document.getElementById("dados").value);
+    await requisicao(API, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(dados)
+    });
+    document.getElementById("dados").value = "";
+    listar();
+  } catch(e) {
+    if (e instanceof SyntaxError) status.textContent = "❌ JSON inválido!";
+  }
+}
+
+async function excluir(id) {
+  if (id == null || !confirm("Deseja excluir este item?")) return;
+  try {
+    await requisicao(`${API}/${encodeURIComponent(id)}`, {method:"DELETE"});
+    listar();
+  } catch {}
+}
+
+listar();
+</script>
+</body>
+</html>
