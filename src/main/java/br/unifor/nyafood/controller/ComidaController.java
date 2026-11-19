@@ -2,7 +2,9 @@ package br.unifor.nyafood.controller;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,33 +13,26 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.unifor.nyafood.model.Comida;
+import br.unifor.nyafood.service.ComidaService;
 
-@CrossOrigin(origin="*")
 @RestController 
 public class ComidaController {
-   private ArrayList<Comida> menu = new ArrayList<>(Arrays.asList(
-        new Comida("Petisco", 20),
-        new Comida("Ração", 200)
-    ));
-
-
-    @GetMapping ("/itens")
-   public ArrayList<String> getMenu() {
-        ArrayList<String> opcoes = new ArrayList<>();
-        for (Comida comida : menu)
-            opcoes.add(comida.getDescricao());
-
-        return opcoes;
+   @Autowired 
+   private ComidaService service;
+   
+   @GetMapping ("/itens")
+   public List<Comida> getMenu() {
+      return service.listarItens();
    }
 
    @GetMapping("/itens/{id}")
    public Comida getDetalhes(@PathVariable int id) {
-    return menu.get(id);
+      return service.listarItem(id);
    }
 
    @PostMapping("/itens")
    public void criarItem(@RequestBody Comida comida) {
-    menu.add(comida);
+      service.adicionar(comida);
    }
 
 //    public void atualizarItem(int id, Comida comida) {
@@ -45,12 +40,12 @@ public class ComidaController {
 //     menu.add(comida);
 //    }
 
-   @DeleteMapping("/itens/{id}")
-   public void deletarItem(@PathVariable int id) {
-    menu.remove(id);
-   }
+   // @DeleteMapping("/itens/{id}")
+   // public void deletarItem(@PathVariable int id) {
+   //  menu.remove(id);
+   // }
 
-   public void deletarTodos() {
-    menu = new ArrayList<>();
-   }
+   // public void deletarTodos() {
+   //  menu = new ArrayList<>();
+   // }
 }
